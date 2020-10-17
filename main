@@ -1,0 +1,62 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn import datasets
+from numpy import random
+
+# Load the iris dataset
+iris = datasets.load_iris()
+dataframe = pd.DataFrame(iris.data, columns = iris.feature_names)
+no_records = len(dataframe)
+
+# set the number of clusters evaluate the Algorithm behaviour
+no_clusters = 11
+
+# create input numpy array
+X = pd.DataFrame(dataframe, columns = ['sepal length (cm)','sepal width (cm)',
+                                       'petal length (cm)','petal width (cm)']).to_numpy()
+
+# This array is used to save the error cost for the respective number of clusters
+cost_array = []
+
+for i in range(1,no_clusters):
+
+    # Ramdomly initialize i number of centroids from the records
+    centroids = []
+    for j in range(i):
+        centroids.append(X[random.randint(1, no_records)])
+
+    # assigning centroids to each record in dataset by index
+    records_centroid_index = []
+    for x in range(no_records):
+        diff = []
+        for c in range(i):
+            # get square distance from each centroid and store the index of the minimum
+            diff.append(sum((X[x] - centroids[c]) ** 2))
+        records_centroid_index.append(np.array(diff).argmin())
+
+    # update centroids as the average mean of assigned records
+    for c in range(len(centroids)):
+        # get all the records that belong to that cluster
+        records_per_centroid= np.where(np.array(records_centroid_index) == c)[0]
+        if len(records_per_centroid) != 0:
+            # initialize the new centroid
+            new_centroid = np.zeros(X.shape[1])
+            # assign value to initialized centroid
+            for r in records_per_centroid:
+                new_centroid = new_centroid+X[r]
+            centroids[c] = new_centroid/len(records_per_centroid)
+
+    # compute error cost for each number of clusters
+    for x in range(no_records):
+        cost  = sum((X[x] - centroids[records_centroid_index[x]]) ** 2)
+    cost = cost/no_records
+    print('No of Clusters :',i,' Cost: ',cost)
+    cost_array.append(cost)
+
+# Line gragh to observe Elbow to select the optimum number of clusters
+plt.plot(range(1, no_clusters), cost_array)
+plt.title('Graph to observe an Elbow formation')
+plt.xlabel('Number of clusters')
+plt.ylabel('Cost')
+plt.show()
